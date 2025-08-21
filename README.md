@@ -2,7 +2,7 @@
 
 # MGA Foursome Export
 
-This tool exports a the player groups in an [Mediocre Golf Association](https://mgatour.com) event to a CSV file.
+This tool exports a the player groups in a [Mediocre Golf Association](https://mgatour.com) event to a CSV file.
 
 ---
 
