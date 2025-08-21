@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-mga_foursomes_to_csv.py
+medio_foursome_export.py
 
-Parse an MGA foursome list page (e.g. https://mgatour.com/events/foursome-list/17116)
+Parse foursomes from an MGA tournament page
 into a CSV with columns: Group, Time, FirstName, LastName
 """
 
@@ -26,7 +26,9 @@ except ImportError:
 def load_html(source: str) -> str:
     """Load HTML from a URL or local file path."""
     if re.match(r"^https?://", source, re.I):
-        resp = requests.get(source, timeout=30)
+        url = source
+        headers = {'User-Agent': 'Python'}
+        resp = requests.get(url, headers=headers, timeout=30)
         resp.raise_for_status()
         return resp.text
     p = Path(source)
@@ -57,7 +59,7 @@ def group_number(group_label: str) -> int:
 
 
 def clean_player(raw: str) -> str:
-    """Remove leading number + dot from items like '1. Chris Dohrn'."""
+    """Remove leading number + dot from items."""
     s = re.sub(r"^\s*\d+\.\s*", "", raw.strip())
     return re.sub(r"\s+", " ", s).strip()
 

@@ -8,7 +8,7 @@ This tool exports a the player groups in an [Mediocre Golf Association](https://
 
 ## Features
 
-* Works with a live URL (e.g. `https://mgatour.com/events/foursome-list/17116`)
+* Works with a live URL (e.g. `https://[EVENT_PAGE_ADDRESS]`)
 * Or with a saved HTML file from the MGA site
 * Splits names into first and last
 
@@ -35,48 +35,21 @@ pip install requests beautifulsoup4
 Clone the repo and run the tool:
 
 ```bash
-git clone https://github.com/your-username/mga-foursomes-csv.git
-cd mga-foursomes-csv
+git clone https://github.com/seanhartdev/MedioFoursomeExport.git
+cd MedioFoursomeExport
 
 # install dependencies
 pip install -r requirements.txt
 
 # run against a live MGA foursome list
-python mga_foursomes_to_csv.py "https://mgatour.com/events/foursome-list/17116" -o foursomes.csv
+python  medio_foursome_export.py "https://[EVENT_PAGE_ADDRESS]" -o foursomes.csv
 ```
 
 Or run against a saved HTML file:
 
 ```bash
-python mga_foursomes_to_csv.py ./foursome-list-17116.html -o foursomes.csv
+python medio_foursome_export.py ./foursome-list-17116.html -o foursomes.csv
 ```
 
----
 
-## Example Output
-
-CSV file (`foursomes.csv`):
-
-```csv
-Group,Time,FirstName,LastName
-1,9:06AM,Chris,Dohrn
-1,9:06AM,Raymond,Major
-1,9:06AM,Chad,Johnson
-1,9:06AM,Stephen,Seagly
-2,9:15AM,Timothy,Gunn
-2,9:15AM,Nick,Gunn
-2,9:15AM,douglas,leitch
-...
-```
-
----
-
-## Notes
-
-* Groups are always stored as **numbers** (e.g. `1` instead of `Group 1`).
-* Time keeps its **AM/PM** suffix (e.g. `9:06AM`).
-* Name splitting is done on the **first space**. Multi-word last names will all go into the `LastName` column.
-* Sorting is **by Group → Time → LastName**.
-
----
 
