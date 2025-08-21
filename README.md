@@ -48,7 +48,7 @@ python  medio_foursome_export.py "https://[EVENT_PAGE_ADDRESS]" -o foursomes.csv
 Or run against a saved HTML file:
 
 ```bash
-python medio_foursome_export.py ./foursome-list-17116.html -o foursomes.csv
+python medio_foursome_export.py [YOUR_FILE] -o foursomes.csv
 ```
 
 
