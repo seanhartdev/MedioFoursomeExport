@@ -1,16 +1,8 @@
-Perfect — here’s the README updated with a **Quickstart** section so it’s GitHub-ready:
-
 ---
 
-# MGA Foursome List to CSV
+# MGA Foursome Export
 
-This tool converts a [Mediocre Golf Association](https://mgatour.com) event “Foursome List” page into a structured CSV file.
-Each row in the CSV corresponds to **one player**, with columns for:
-
-* **Group** (numeric group number)
-* **Time** (tee time, with AM/PM)
-* **FirstName**
-* **LastName**
+This tool exports a the player groups in an [Mediocre Golf Association](https://mgatour.com) event to a CSV file.
 
 ---
 
@@ -18,7 +10,7 @@ Each row in the CSV corresponds to **one player**, with columns for:
 
 * Works with a live URL (e.g. `https://mgatour.com/events/foursome-list/17116`)
 * Or with a saved HTML file from the MGA site
-* Automatically cleans up group labels, normalizes times, and splits names
+* Splits names into first and last
 
 ---
 
