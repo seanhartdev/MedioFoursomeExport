@@ -42,14 +42,19 @@ cd MedioFoursomeExport
 pip install -r requirements.txt
 
 # run against a live MGA foursome list
-python  medio_foursome_export.py "https://[EVENT_PAGE_ADDRESS]" -o foursomes.csv
+python medio_foursome_export.py "https://[EVENT_PAGE_ADDRESS]"
+# writes by default to ~/Documents/foursomes-[EVENT_SLUG].csv
+
+# optional explicit output path
+python medio_foursome_export.py "https://[EVENT_PAGE_ADDRESS]" -o foursomes.csv
+
+# prompt to replace guest placeholders like "Guest #12 ."
+python medio_foursome_export.py "https://[EVENT_PAGE_ADDRESS]" --prompt-guests
 ```
 
 Or run against a saved HTML file:
 
 ```bash
-python medio_foursome_export.py [YOUR_FILE] -o foursomes.csv
+python medio_foursome_export.py [YOUR_FILE]
 ```
-
-
 

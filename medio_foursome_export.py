@@ -3,7 +3,7 @@
 medio_foursome_export.py
 
 Parse foursomes from an MGA tournament page
-into a CSV with columns: Group, Time, FirstName, LastName
+into a CSV with columns: Time, Group, FirstName, LastName, Nickname
 """
 
 import argparse
@@ -11,6 +11,7 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 try:
     import requests
@@ -26,8 +27,16 @@ except ImportError:
 def load_html(source: str) -> str:
     """Load HTML from a URL or local file path."""
     if re.match(r"^https?://", source, re.I):
-        url = source
-        headers = {'User-Agent': 'Python'}
+        parsed = urlparse(source)
+        q = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        q["_cb"] = str(int(datetime.now().timestamp()))
+        url = urlunparse(parsed._replace(query=urlencode(q)))
+        headers = {
+            "User-Agent": "Python",
+            "Cache-Control": "no-cache, no-store, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        }
         resp = requests.get(url, headers=headers, timeout=30)
         resp.raise_for_status()
         return resp.text
@@ -65,14 +74,38 @@ def clean_player(raw: str) -> str:
 
 
 def split_name(full: str):
-    """Split into first and last name (by first space)."""
+    """Split into first/last name and extract quoted nickname (if present)."""
+    nickname = ""
+    m = re.search(r'"[^"]+"', full)
+    if m:
+        nickname = m.group(0)  # Preserve surrounding quotes
+        full = (full[:m.start()] + " " + full[m.end():]).strip()
+        full = re.sub(r"\s+", " ", full)
+
     parts = full.split(" ", 1)
     if len(parts) == 1:
-        return parts[0], ""
-    return parts[0], parts[1]
+        return parts[0], "", nickname
+    return parts[0], parts[1], nickname
 
 
-def parse_foursomes(html: str):
+def maybe_prompt_guest_name(player: str, prompt_guests: bool) -> str:
+    """Optionally replace guest placeholder text with an entered name."""
+    if not prompt_guests:
+        return player
+
+    if not re.fullmatch(r"Guest \d+ \.", player, re.I):
+        return player
+
+    num_match = re.search(r"\d+", player)
+    if not num_match:
+        return player
+
+    guest_num = num_match.group(0)
+    entered = input(f"Enter full name for Guest #{guest_num}: ").strip()
+    return entered if entered else player
+
+
+def parse_foursomes(html: str, prompt_guests: bool = False):
     """Return a list of dicts: {Group, Time, FirstName, LastName}"""
     soup = BeautifulSoup(html, "html.parser")
     out_rows = []
@@ -95,13 +128,15 @@ def parse_foursomes(html: str):
             txt = li.get_text(" ", strip=True)
             player = clean_player(txt)
             if player:
-                first, last = split_name(player)
+                player = maybe_prompt_guest_name(player, prompt_guests)
+                first, last, nickname = split_name(player)
                 out_rows.append(
                     {
                         "Group": group_num,
                         "Time": time_label,
                         "FirstName": first,
                         "LastName": last,
+                        "Nickname": nickname,
                     }
                 )
 
@@ -113,9 +148,27 @@ def write_csv(rows, output_path: str):
     import csv
 
     with open(output_path, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["Group", "Time", "FirstName", "LastName"])
+        w = csv.DictWriter(
+            f, fieldnames=["Time", "Group", "FirstName", "LastName", "Nickname"]
+        )
         w.writeheader()
         w.writerows(rows)
+
+
+def default_output_path(source: str) -> Path:
+    """Build a default CSV path in ~/Documents from the source slug/stem."""
+    slug = ""
+    if re.match(r"^https?://", source, re.I):
+        parsed = urlparse(source)
+        slug = Path(parsed.path).name
+    else:
+        slug = Path(source).stem
+
+    slug = re.sub(r"[^a-zA-Z0-9-]+", "-", slug).strip("-").lower()
+    if not slug:
+        slug = "mga-foursomes"
+
+    return Path.home() / "Documents" / f"foursomes-{slug}.csv"
 
 
 def main():
@@ -125,18 +178,22 @@ def main():
     ap.add_argument(
         "source", help="URL to the foursome list page OR a local HTML file path"
     )
+    ap.add_argument("-o", "--output", help="Output CSV path")
     ap.add_argument(
-        "-o", "--output", default="mga_foursomes.csv", help="Output CSV path"
+        "--prompt-guests",
+        action="store_true",
+        help="Prompt for guest names when placeholders like 'Guest #12 .' are encountered",
     )
     args = ap.parse_args()
 
     try:
         html = load_html(args.source)
-        rows = parse_foursomes(html)
+        rows = parse_foursomes(html, prompt_guests=args.prompt_guests)
         if not rows:
             sys.stderr.write("No foursome rows found.\n")
-        write_csv(rows, args.output)
-        print(f"Wrote {len(rows)} rows to {args.output}")
+        output_path = Path(args.output) if args.output else default_output_path(args.source)
+        write_csv(rows, str(output_path))
+        print(f"Wrote {len(rows)} rows to {output_path}")
     except Exception as e:
         sys.stderr.write(f"Error: {e}\n")
         sys.exit(2)
